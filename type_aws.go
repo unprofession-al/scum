@@ -6,6 +6,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go/service/sts"
 )
 
 const awsprofiletype = "aws"
@@ -32,7 +36,9 @@ func (p *AWSProfile) Describe() string {
 
 func (p *AWSProfile) Capabilities() ProfileCapabilities {
 	return ProfileCapabilities{
-		Mount: true,
+		Mount:  true,
+		Rotate: true,
+		Verify: true,
 	}
 }
 
@@ -90,4 +96,77 @@ func (p *AWSProfile) Name() string {
 
 func (p *AWSProfile) MountSnippet() (string, string) {
 	return ".awscredentials", p.String()
+}
+
+func (p *AWSProfile) RotateCredentials() ([]byte, error) {
+	sess, _, err := p.getSession()
+
+	iamClient := iam.New(sess)
+	respListAccessKeys, err := iamClient.ListAccessKeys(&iam.ListAccessKeysInput{})
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Delete Old Access Key
+	if len(respListAccessKeys.AccessKeyMetadata) == 2 {
+		keyIndex := 0
+		if *respListAccessKeys.AccessKeyMetadata[0].AccessKeyId == p.AWSAccessKeyID {
+			keyIndex = 1
+		}
+
+		// fmt.Println("You have two access keys, which is the max number of access keys.")
+		_, err := iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+			AccessKeyId: respListAccessKeys.AccessKeyMetadata[keyIndex].AccessKeyId,
+		})
+		if err != nil {
+			return []byte{}, err
+		}
+		// fmt.Printf("Deleted access key %s.\n", *respListAccessKeys.AccessKeyMetadata[keyIndex].AccessKeyId)
+	}
+
+	// Create the new access key
+	respCreateAccessKey, err := iamClient.CreateAccessKey(&iam.CreateAccessKeyInput{})
+	if err != nil {
+		return []byte{}, err
+	}
+	// fmt.Printf("Created access key %s.\n", *respCreateAccessKey.AccessKey.AccessKeyId)
+
+	// Todo: Verify
+
+	// delete old access key
+	_, err = iamClient.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+		AccessKeyId: &p.AWSAccessKeyID,
+	})
+	if err != nil {
+		return []byte{}, err
+	}
+
+	// Update data in memory
+	p.AWSAccessKeyID = *respCreateAccessKey.AccessKey.AccessKeyId
+	p.AWSSecretAccessKey = *respCreateAccessKey.AccessKey.SecretAccessKey
+
+	return p.Serialize()
+}
+
+func (p *AWSProfile) VerifyCredentials() (string, bool) {
+	_, info, err := p.getSession()
+	if err != nil {
+		return err.Error(), false
+	}
+
+	return info, true
+}
+
+func (p *AWSProfile) getSession() (*session.Session, string, error) {
+	os.Setenv("AWS_ACCESS_KEY_ID", p.AWSAccessKeyID)
+	os.Setenv("AWS_SECRET_ACCESS_KEY", p.AWSSecretAccessKey)
+	sess := session.Must(session.NewSessionWithOptions(session.Options{}))
+
+	// sts get-caller-identity
+	stsClient := sts.New(sess)
+	respGetCallerIdentity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
+	if err != nil {
+		return sess, "", fmt.Errorf("Error getting caller identity: %s. Is the key disabled?", err.Error())
+	}
+	return sess, fmt.Sprintf("Your user ARN is: %s", *respGetCallerIdentity.Arn), nil
 }

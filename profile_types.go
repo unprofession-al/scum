@@ -68,6 +68,8 @@ type Profile interface {
 	String() string
 	Type() string
 	MountSnippet() (string, string)
+	RotateCredentials() ([]byte, error)
+	VerifyCredentials() (string, bool)
 }
 
 type ProfileCapabilities struct {
@@ -75,6 +77,7 @@ type ProfileCapabilities struct {
 	Env    bool
 	Rotate bool
 	Import bool
+	Verify bool
 }
 
 func (c ProfileCapabilities) String() string {
@@ -89,5 +92,6 @@ func (c ProfileCapabilities) String() string {
 	out = append(out, fmt.Sprintf("\t%s\tAllows to print credentials as environment variables", getUnicode(c.Env)))
 	out = append(out, fmt.Sprintf("\t%s\tAllows to rotate credentials", getUnicode(c.Rotate)))
 	out = append(out, fmt.Sprintf("\t%s\tAllows to import credentials from a file", getUnicode(c.Import)))
+	out = append(out, fmt.Sprintf("\t%s\tAllows to verify credentials", getUnicode(c.Verify)))
 	return strings.Join(out, "\n")
 }
