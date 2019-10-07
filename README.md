@@ -35,11 +35,13 @@ Available Commands:
   help        Help about any command
   list        List credential
   mount       Mount a set of credential
+  rotate      Rotate credential
   show        Show set of credential
-  types       Show information about the credential types
+  types       Show information about the supported credential types
+  verify      Verify a set of credential
 
 Flags:
-  -c, --config string   Configuration file for scum (default "/home/.../.config/scum/config.yml")
+  -c, --config string   Configuration file for scum (default "/home/daniel/.config/scum/config.yml")
   -h, --help            help for scum
 
 Use "scum [command] --help" for more information about a command.
