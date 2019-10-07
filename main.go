@@ -55,10 +55,7 @@ var typesCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		for _, name := range ptr.List() {
 			d, err := ptr.Describe(name)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 			fmt.Printf("Profile Type \033[1m'%s'\033[0m\n\n", name)
 			fmt.Printf("%s\n\n", d)
 		}
@@ -70,10 +67,7 @@ var configCmd = &cobra.Command{
 	Short: "Print configuration",
 	Run: func(cmd *cobra.Command, args []string) {
 		d, err := yaml.Marshal(&cfg)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 		fmt.Printf("---\n%s\n", string(d))
 	},
 }
@@ -83,41 +77,23 @@ var addCmd = &cobra.Command{
 	Short: "Add a new set of credential",
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		p, err := NewProfile(flagKind)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		p.Prompt()
 		serialized, err := p.Serialize()
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		encrypted, err := c.Encrypt(serialized)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		err = b.Write(p.Name(), p.Type(), encrypted)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 	},
 }
 
@@ -126,16 +102,10 @@ var listCmd = &cobra.Command{
 	Short: "List credential",
 	Run: func(cmd *cobra.Command, args []string) {
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		list, err := b.List(args)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		if len(list) == 0 {
 			fmt.Println("No matches found")
@@ -146,66 +116,44 @@ var listCmd = &cobra.Command{
 		}
 	},
 }
+
 var showCmd = &cobra.Command{
 	Use:   "show",
 	Short: "Show set of credential",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		list, err := b.List(args)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		var pw []byte
 		if len(list) > 0 {
 			fmt.Fprintf(os.Stderr, "Enter Password: ")
 			pw, err = terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
+			return
 		}
 
 		for name, kind := range list {
 			p, err := NewProfile(kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			encrypted, err := b.Read(name, kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			data, err := c.Decrypt(encrypted, pw)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			err = p.Deserialize(data)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			fmt.Println(p)
 
@@ -219,31 +167,19 @@ var mountCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		list, err := b.List(args)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		var pw []byte
 		if len(list) > 0 {
 			fmt.Fprintf(os.Stderr, "Enter Password: ")
 			pw, err = terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
@@ -253,10 +189,7 @@ var mountCmd = &cobra.Command{
 		mountFiles := map[string][]byte{}
 		for name, kind := range list {
 			p, err := NewProfile(kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			if !p.Capabilities().Mount {
 				fmt.Printf("Profile '%s' cannot be mounted because its of kind %s which does not support mount. Skipping...\n", name, kind)
@@ -264,22 +197,13 @@ var mountCmd = &cobra.Command{
 			}
 
 			encrypted, err := b.Read(name, kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			data, err := c.Decrypt(encrypted, pw)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			err = p.Deserialize(data)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			mountPath, mountSnippet := p.MountSnippet()
 			mountData := append(mountFiles[mountPath], []byte(mountSnippet)...)
@@ -297,31 +221,19 @@ var verifyCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		list, err := b.List(args)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		var pw []byte
 		if len(list) > 0 {
 			fmt.Fprintf(os.Stderr, "Enter Password: ")
 			pw, err = terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
@@ -330,10 +242,7 @@ var verifyCmd = &cobra.Command{
 
 		for name, kind := range list {
 			p, err := NewProfile(kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			if !p.Capabilities().Verify {
 				fmt.Printf("Profile '%s' cannot be verified because its of kind %s which does not support verification. Skipping...\n", name, kind)
@@ -341,22 +250,13 @@ var verifyCmd = &cobra.Command{
 			}
 
 			encrypted, err := b.Read(name, kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			data, err := c.Decrypt(encrypted, pw)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			err = p.Deserialize(data)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			getUnicode := func(b bool) string {
 				if b {
@@ -376,22 +276,13 @@ var rotateCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		b, err := NewBag(cfg.BagPath)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		list, err := b.List(args)
-		if err != nil {
-			fmt.Println(err)
-			os.Exit(-1)
-		}
+		exitOnErr(err)
 
 		var pw []byte
 		if len(list) > 0 {
@@ -401,10 +292,7 @@ var rotateCmd = &cobra.Command{
 			}
 			fmt.Fprintf(os.Stderr, "Enter Password: ")
 			pw, err = terminal.ReadPassword(int(syscall.Stdin))
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
@@ -413,10 +301,7 @@ var rotateCmd = &cobra.Command{
 
 		for name, kind := range list {
 			p, err := NewProfile(kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			if !p.Capabilities().Rotate {
 				fmt.Printf("Profile '%s' cannot be rotated because its of kind %s which does not support key rotation. Skipping...\n", name, kind)
@@ -425,40 +310,21 @@ var rotateCmd = &cobra.Command{
 			fmt.Printf("Rotating %s (type %s)... ", name, p.Type())
 
 			encrypted, err := b.Read(name, kind)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			data, err := c.Decrypt(encrypted, pw)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			err = p.Deserialize(data)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			newSerialized, err := p.RotateCredentials()
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			newEncrypted, err := c.Encrypt(newSerialized)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
+			exitOnErr(err)
 
 			err = b.Write(p.Name(), p.Type(), newEncrypted)
-			if err != nil {
-				fmt.Println(err)
-				os.Exit(-1)
-			}
 			fmt.Printf("done!\n")
 		}
 	},
@@ -467,6 +333,13 @@ var rotateCmd = &cobra.Command{
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
+		os.Exit(-1)
+	}
+}
+
+func exitOnErr(err error) {
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
 }
