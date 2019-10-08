@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"syscall"
 
@@ -133,10 +134,8 @@ var showCmd = &cobra.Command{
 
 		var pw []byte
 		if len(list) > 0 {
-			fmt.Fprintf(os.Stderr, "Enter Password: ")
-			pw, err = terminal.ReadPassword(int(syscall.Stdin))
+			pw, err = promptPassword(cfg.PrivateRSAKey, os.Stderr)
 			exitOnErr(err)
-			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
 			return
@@ -177,10 +176,8 @@ var mountCmd = &cobra.Command{
 
 		var pw []byte
 		if len(list) > 0 {
-			fmt.Fprintf(os.Stderr, "Enter Password: ")
-			pw, err = terminal.ReadPassword(int(syscall.Stdin))
+			pw, err = promptPassword(cfg.PrivateRSAKey, os.Stderr)
 			exitOnErr(err)
-			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
 			return
@@ -231,10 +228,8 @@ var verifyCmd = &cobra.Command{
 
 		var pw []byte
 		if len(list) > 0 {
-			fmt.Fprintf(os.Stderr, "Enter Password: ")
-			pw, err = terminal.ReadPassword(int(syscall.Stdin))
+			pw, err = promptPassword(cfg.PrivateRSAKey, os.Stderr)
 			exitOnErr(err)
-			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
 			return
@@ -290,10 +285,8 @@ var rotateCmd = &cobra.Command{
 			for name, kind := range list {
 				fmt.Printf("\t%s (type %s)\n", name, kind)
 			}
-			fmt.Fprintf(os.Stderr, "Enter Password: ")
-			pw, err = terminal.ReadPassword(int(syscall.Stdin))
+			pw, err = promptPassword(cfg.PrivateRSAKey, os.Stderr)
 			exitOnErr(err)
-			fmt.Println("")
 		} else {
 			fmt.Println("No matches found")
 			return
@@ -342,4 +335,11 @@ func exitOnErr(err error) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(-1)
 	}
+}
+
+func promptPassword(message string, out io.Writer) ([]byte, error) {
+	fmt.Fprintf(out, "Enter Password for '%s': ", message)
+	pw, err := terminal.ReadPassword(int(syscall.Stdin))
+	fmt.Println("")
+	return pw, err
 }
