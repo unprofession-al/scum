@@ -1,4 +1,6 @@
-# Secret Credential Utility/Manager
+# scum: Secret Credential Utility/Manager
+
+![scum](./scum.png "scum")
 
 DISCLAIMER: This is a personal proof of concept. Please do not use this...
 
