@@ -24,6 +24,22 @@ go get -u github.com/unprofession-al/scum
 
 ### Usage
 
+You need to prep some directories first (can be configured, see below):
+
+```
+# this is where your encrypted credentials live
+# feel free to version control that dir in order to
+# share between computers.
+mkdir ~/.scumbag/ 
+
+# you also need a place to mount your credentials and link
+# the actual credenential files to (such as ~/.aws/credentials)
+# by default thats...
+mkdir ~/.scum/
+```
+
+Now you are all set:
+
 ```
 # scum
 Secret Credentials Utility/Manager
