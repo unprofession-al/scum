@@ -365,6 +365,8 @@ func (a App) rotateCmd(cmd *cobra.Command, args []string) {
 		exitOnErr(err)
 
 		err = b.Write(p.Name(), p.Type(), newEncrypted)
+		exitOnErr(err)
+
 		fmt.Printf("done!\n")
 	}
 }

@@ -22,11 +22,11 @@ func NewConfig(path string) (config, error) {
 	c := defaults()
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return c, fmt.Errorf("Could not read file %s: %s", path, err.Error())
+		return c, fmt.Errorf("could not read file %s: %s", path, err.Error())
 	}
 	err = yaml.Unmarshal(data, &c)
 	if err != nil {
-		return c, fmt.Errorf("Could not read data from config file %s: %s", path, err.Error())
+		return c, fmt.Errorf("could not read data from config file %s: %s", path, err.Error())
 	}
 
 	c.BagPath = tidyPath(c.BagPath)

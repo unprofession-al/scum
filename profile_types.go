@@ -49,7 +49,7 @@ func NewProfile(kind string) (Profile, error) {
 	empty, ok := ptr[kind]
 	if !ok {
 		kinds := []string{}
-		for k, _ := range ptr {
+		for k := range ptr {
 			kinds = append(kinds, k)
 		}
 		return nil, fmt.Errorf("Profile type '%s' does not exist, must be one of the following: %s", kind, strings.Join(kinds, ", "))

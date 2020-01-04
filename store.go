@@ -19,11 +19,11 @@ func NewBag(path string) (Bag, error) {
 	b := Bag{}
 	stat, err := os.Stat(path)
 	if err != nil {
-		return b, fmt.Errorf("Scum Bag '%s' could not be openend: %s", path, err.Error())
+		return b, fmt.Errorf("scum bag '%s' could not be openend: %s", path, err.Error())
 	}
 
 	if !stat.IsDir() {
-		return b, fmt.Errorf("Scum Bag '%s' is not a Directory", path)
+		return b, fmt.Errorf("scum bag '%s' is not a Directory", path)
 	}
 
 	b.Base = path
@@ -38,7 +38,7 @@ func (b Bag) List(filters []string) (map[string]string, error) {
 
 	files, err := ioutil.ReadDir(b.Base)
 	if err != nil {
-		return out, fmt.Errorf("Scum Bag '%s' could not be listed: %s", b.Base, err.Error())
+		return out, fmt.Errorf("scum bag '%s' could not be listed: %s", b.Base, err.Error())
 	}
 
 	for _, file := range files {
@@ -48,7 +48,7 @@ func (b Bag) List(filters []string) (map[string]string, error) {
 
 		seg := strings.SplitN(file.Name(), bagNameSeparator, 2)
 		if len(seg) < 2 {
-			return out, fmt.Errorf("Scum Bag '%s' contains malformed file: %s", b.Base, file.Name())
+			return out, fmt.Errorf("scum bag '%s' contains malformed file: %s", b.Base, file.Name())
 		}
 
 		kind := seg[0]

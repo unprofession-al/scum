@@ -100,6 +100,9 @@ func (p *AWSProfile) MountSnippet() (string, string) {
 
 func (p *AWSProfile) RotateCredentials() ([]byte, error) {
 	sess, _, err := p.getSession()
+	if err != nil {
+		return []byte{}, err
+	}
 
 	iamClient := iam.New(sess)
 	respListAccessKeys, err := iamClient.ListAccessKeys(&iam.ListAccessKeysInput{})
@@ -166,7 +169,7 @@ func (p *AWSProfile) getSession() (*session.Session, string, error) {
 	stsClient := sts.New(sess)
 	respGetCallerIdentity, err := stsClient.GetCallerIdentity(&sts.GetCallerIdentityInput{})
 	if err != nil {
-		return sess, "", fmt.Errorf("Error getting caller identity: %s. Is the key disabled?", err.Error())
+		return sess, "", fmt.Errorf("error getting caller identity: %s. Is the key disabled?", err.Error())
 	}
 	return sess, fmt.Sprintf("Your user ARN is: %s", *respGetCallerIdentity.Arn), nil
 }

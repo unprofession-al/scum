@@ -25,7 +25,7 @@ func NewCrypt(pubFile, privFile string) (Crypt, error) {
 
 	pubData, err := ioutil.ReadFile(pubFile)
 	if err != nil {
-		return c, fmt.Errorf("Error while reading public key file %s: %s", pubFile, err.Error())
+		return c, fmt.Errorf("error while reading public key file %s: %s", pubFile, err.Error())
 	}
 	err = c.bytesToPublicKey(pubData)
 	if err != nil {
@@ -34,7 +34,7 @@ func NewCrypt(pubFile, privFile string) (Crypt, error) {
 
 	privData, err := ioutil.ReadFile(privFile)
 	if err != nil {
-		return c, fmt.Errorf("Error while reading private key file %s: %s", privFile, err.Error())
+		return c, fmt.Errorf("error while reading private key file %s: %s", privFile, err.Error())
 	}
 	err = c.bytesToPrivateKeyBlock(privData)
 	if err != nil {
@@ -59,7 +59,7 @@ func (c Crypt) Decrypt(data, pass []byte) ([]byte, error) {
 func (c *Crypt) bytesToPrivateKeyBlock(priv []byte) error {
 	block, _ := pem.Decode(priv)
 	if block == nil {
-		return fmt.Errorf("Private key could not be decoded")
+		return fmt.Errorf("private key could not be decoded")
 	}
 	c.privateKeyBlock = block
 	return nil
@@ -86,7 +86,7 @@ func (c *Crypt) bytesToPublicKey(pub []byte) error {
 	tokens := strings.Split(string(pub), " ")
 
 	if len(tokens) < 2 {
-		return fmt.Errorf("Invalid key format; must contain at least two fields (keytype data [comment])")
+		return fmt.Errorf("invalid key format; must contain at least two fields (keytype data [comment])")
 	}
 
 	key_type := tokens[0]
@@ -96,9 +96,12 @@ func (c *Crypt) bytesToPublicKey(pub []byte) error {
 	}
 
 	format, e, n, err := c.getRSAValues(data)
+	if err != nil {
+		return err
+	}
 
 	if format != key_type {
-		return fmt.Errorf("Key type said %s, but encoded format said %s.  These should match!", key_type, format)
+		return fmt.Errorf("key type said %s, but encoded format said %s. these should match", key_type, format)
 	}
 
 	c.publicKey = &rsa.PublicKey{
@@ -154,7 +157,7 @@ func (c Crypt) getRSAValues(data []byte) (format string, e *big.Int, n *big.Int,
 		return
 	}
 
-	data, n, err = c.readBigInt(data, length)
+	_, n, err = c.readBigInt(data, length)
 	if err != nil {
 		return
 	}
