@@ -313,7 +313,7 @@ func (a *App) verifyCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (a App) rotateCmd(cmd *cobra.Command, args []string) {
+func (a *App) rotateCmd(cmd *cobra.Command, args []string) {
 	cfg, err := NewConfig(a.cfg.configPath)
 	exitOnErr(err)
 
@@ -371,6 +371,6 @@ func (a App) rotateCmd(cmd *cobra.Command, args []string) {
 	}
 }
 
-func (a App) versionCmd(cmd *cobra.Command, args []string) {
+func (a *App) versionCmd(cmd *cobra.Command, args []string) {
 	fmt.Println(versionInfo())
 }
