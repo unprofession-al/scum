@@ -253,7 +253,7 @@ func (a *App) editCmd(cmd *cobra.Command, args []string) {
 		edited, err := CaptureInputFromEditor(data)
 		exitOnErr(err)
 
-		if bytes.Compare(data, edited) == 0 {
+		if bytes.Equal(data, edited) {
 			fmt.Printf("nothing changed, done!\n")
 			continue
 		}
