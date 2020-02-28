@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 
@@ -60,6 +61,7 @@ func NewApp() *App {
 		Use:   "edit",
 		Short: "Edit a new set of credential in $EDITOR",
 		Run:   a.editCmd,
+		Args:  cobra.MinimumNArgs(1),
 	}
 	rootCmd.AddCommand(editCmd)
 
@@ -250,6 +252,11 @@ func (a *App) editCmd(cmd *cobra.Command, args []string) {
 
 		edited, err := CaptureInputFromEditor(data)
 		exitOnErr(err)
+
+		if bytes.Compare(data, edited) == 0 {
+			fmt.Printf("nothing changed, done!\n")
+			continue
+		}
 
 		newEncrypted, err := c.Encrypt(edited)
 		exitOnErr(err)
