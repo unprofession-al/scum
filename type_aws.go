@@ -75,7 +75,7 @@ func (p *AWSProfile) Prompt() error {
 }
 
 func (p *AWSProfile) Serialize() ([]byte, error) {
-	return json.Marshal(p)
+	return json.MarshalIndent(p, "", "    ")
 }
 
 func (p *AWSProfile) Deserialize(in []byte) error {

@@ -55,6 +55,14 @@ func NewApp() *App {
 	addCmd.PersistentFlags().StringVarP(&a.cfg.flagKind, "type", "t", "aws", "Profile type")
 	rootCmd.AddCommand(addCmd)
 
+	// edit
+	editCmd := &cobra.Command{
+		Use:   "edit",
+		Short: "Edit a new set of credential in $EDITOR",
+		Run:   a.editCmd,
+	}
+	rootCmd.AddCommand(editCmd)
+
 	// show
 	showCmd := &cobra.Command{
 		Use:   "show",
@@ -208,7 +216,48 @@ func (a *App) showCmd(cmd *cobra.Command, args []string) {
 		exitOnErr(err)
 
 		fmt.Println(p)
+	}
+}
 
+func (a *App) editCmd(cmd *cobra.Command, args []string) {
+	cfg, err := NewConfig(a.cfg.configPath)
+	exitOnErr(err)
+
+	c, err := NewCrypt(cfg.PublicRSAKey, cfg.PrivateRSAKey)
+	exitOnErr(err)
+
+	b, err := NewBag(cfg.BagPath)
+	exitOnErr(err)
+
+	list, err := b.List(args)
+	exitOnErr(err)
+
+	var pw []byte
+	if len(list) > 0 {
+		pw, err = promptPassword(cfg.PrivateRSAKey, os.Stderr)
+		exitOnErr(err)
+	} else {
+		fmt.Println("No matches found")
+		return
+	}
+
+	for name, kind := range list {
+		encrypted, err := b.Read(name, kind)
+		exitOnErr(err)
+
+		data, err := c.Decrypt(encrypted, pw)
+		exitOnErr(err)
+
+		edited, err := CaptureInputFromEditor(data)
+		exitOnErr(err)
+
+		newEncrypted, err := c.Encrypt(edited)
+		exitOnErr(err)
+
+		err = b.Write(name, kind, newEncrypted)
+		exitOnErr(err)
+
+		fmt.Printf("done!\n")
 	}
 }
 
