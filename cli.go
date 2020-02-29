@@ -59,7 +59,7 @@ func NewApp() *App {
 	// edit
 	editCmd := &cobra.Command{
 		Use:   "edit",
-		Short: "Edit a new set of credential in $EDITOR",
+		Short: "Edit an existing set of credential in $EDITOR",
 		Run:   a.editCmd,
 		Args:  cobra.MinimumNArgs(1),
 	}
