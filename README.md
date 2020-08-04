@@ -2,7 +2,7 @@
 
 ![scum](./scum.png "scum")
 
-___DISCLAIMER:__ This is a personal proof of concept. Please do not use this..._
+___DISCLAIMER:__ This is a personal proof of concept. Please use this only if you are aware of this..._
 
 Many CLI tools used to work with API's use some kind of credentials file to store secrets. Usually these secrets are unencrypted
 and must therefore be managed very carefully.
